@@ -1,5 +1,5 @@
 const express = require("express")
-const { userWelcome, register } = require("../Controllers/user.controllers")
+const { userWelcome, register, login } = require("../Controllers/user.controllers")
 const router = express.Router()
 // const multer = require('multer');
 // const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -31,6 +31,7 @@ const router = express.Router()
 
 router.get("/user", userWelcome);
 router.post("/register", register);
+router.post("/login", login);
 
 
 module.exports = router
