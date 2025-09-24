@@ -4,6 +4,7 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 const cors = require('cors');
 const userRoutes = require('./Routes/user.routes');
+const AdminRoutes = require('./Routes/admin');
 // const { initializeSocket } = require('./socket'); // Import socket initializer
 // const paystackroute = require('./Controllers/paystackWebhook');
 
@@ -28,6 +29,7 @@ mongoose
 // initializeSocket(server);
 
 app.use('/usercake', userRoutes);
+app.use('/admin', AdminRoutes);
 
 // app.use('/api/paystack', 
 //   express.raw({ type: '*/*' }),  
