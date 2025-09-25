@@ -3,6 +3,7 @@
 const Admin = require("../Models/admin.model");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const ADMIN_SECRET_KEY = process.env.ADMIN_SECRET_KEY 
 
 // check if admin exists
 module.exports.checkAdmin = async (req, res) => {
@@ -15,7 +16,7 @@ module.exports.checkAdmin = async (req, res) => {
 };
 
 // create admin
-module.exports.createAdmin = async (req, res) => {
+module.exports.createAdmin = async (req, res) => {  
   try {
     const { fullname, email, password } = req.body;
 
@@ -45,17 +46,16 @@ module.exports.adminLogin = async (req, res) => {
     const { email, password } = req.body;
 
     const admin = await Admin.findOne({ email });
-    if (!admin) return res.status(400).json({ message: "Invalid email" });
+    if (!admin) return res.status(400).json({ message: "Access denied" });
 
     const isMatch = await bcrypt.compare(password, admin.password);
-    if (!isMatch) return res.status(400).json({ message: "Invalid password" });
+    if (!isMatch) return res.status(400).json({ message: "Access denied" });
 
     const token = jwt.sign(
       { id: admin._id, email: admin.email },
-      process.env.JWT_SECRET,
+      ADMIN_SECRET_KEY ,
       { expiresIn: "1h" }
     );
-
     res.json({ message: "Login successful", token, admin: { id: admin._id, fullname: admin.fullname, email: admin.email } });
   } catch (err) {
     res.status(500).json({ message: "Server error" });
