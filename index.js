@@ -7,6 +7,8 @@ const userRoutes = require('./Routes/user.routes');
 const AdminRoutes = require('./Routes/admin');
 // const { initializeSocket } = require('./socket'); // Import socket initializer
 // const paystackroute = require('./Controllers/paystackWebhook');
+const cloudinary = require("./config/cloudinary"); 
+
 
 const app = express();
 const server = http.createServer(app); // Create the server instance

@@ -19,16 +19,20 @@ module.exports.register = async (req, res) => {
   try {
     const { fullname, email, phonenumber, password } = req.body;
 
-    const existingUser = await Userschema.findOne({ email });
-    if (existingUser) {
+    const existingEmail = await Userschema.findOne({ email });
+    if (existingEmail) {
       return res.status(400).json({ message: "Email already in use" });
+    }
+    const existingFullname = await Userschema.findOne({ fullname });
+    if (existingFullname) {
+      return res.status(400).json({ message: "Fullname already in use" });
     }
 
     const newUser = new Userschema({
       fullname,
       email,
       phonenumber,
-      password, // plain password, will be hashed by pre("save")
+      password, 
     });
 
     await newUser.save();
