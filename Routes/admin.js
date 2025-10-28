@@ -8,4 +8,6 @@ router.post("/login", adminLogin);
 router.post("/admincreateplan", require("../Admincreateplan/adminplan"));
 router.get("/admingetplan", require("../Admincreateplan/admingetplan").admingetplan);
 router.delete("/admindelete/:id", require("../Admincreateplan/admindelete").admindelete);
+router.get("/getsingleplan/:id", require("../Admincreateplan/getsingleplan").getsingleplan);
+
 module.exports = router;
