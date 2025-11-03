@@ -38,7 +38,7 @@ module.exports.useraddorder = async (req, res) => {
 }
 
 
-module.exports.getuserorders = async (req, res) => {
+module.exports. getuserorders = async (req, res) => {
 
     // Get all orders for a specific user
 // router.get("/getorders/:userId", async (req, res) => {
