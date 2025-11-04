@@ -12,8 +12,9 @@ router.get("/admingetplan", require("../Admincreateplan/admingetplan").admingetp
 router.delete("/admindelete/:id", require("../Admincreateplan/admindelete").admindelete);
 router.get("/getsingleplan/:id", require("../Admincreateplan/getsingleplan").getsingleplan);
 router.put("/adminupdate/:id", upload.single("image"), adminupdate);
-
-
+router.put("/orders/:id/delivered", require("../Admincreateplan/admindelivered").markOrderAsDelivered);
+router.get("/settledorders", require("../Admincreateplan/admindelivered").settledorders);
+router.put("/deliveredgroup", require("../Admincreateplan/admindelivered").deliveredgroup);
 
 
 

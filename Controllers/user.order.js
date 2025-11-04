@@ -9,12 +9,9 @@ module.exports.useraddorder = async (req, res) => {
     if (!userId || !planId || !region || !city || !address) {
       return res.status(400).json({ message: "All fields are required" });
     }
-
-    // Fetch plan to get details snapshot
     const plan = await planModels.findById(planId);
     if (!plan) return res.status(404).json({ message: "Plan not found" });
 
-    // Create order
     const newOrder = new orderModel({
       userId,
       planId,
@@ -27,7 +24,7 @@ module.exports.useraddorder = async (req, res) => {
     });
 
     console.log(newOrder, "neworder");
-    
+
     await newOrder.save();
 
     res.status(201).json({ message: "Order successfully created", order: newOrder });
@@ -38,10 +35,10 @@ module.exports.useraddorder = async (req, res) => {
 }
 
 
-module.exports. getuserorders = async (req, res) => {
+module.exports.getuserorders = async (req, res) => {
 
-    // Get all orders for a specific user
-// router.get("/getorders/:userId", async (req, res) => {
+  // Get all orders for a specific user
+  // router.get("/getorders/:userId", async (req, res) => {
   try {
     const { userId } = req.params;
     const orders = await orderModel.find({ userId }).sort({ createdAt: -1 });
@@ -50,6 +47,37 @@ module.exports. getuserorders = async (req, res) => {
     console.error("Error fetching orders:", error);
     res.status(500).json({ message: "Server error" });
   }
-// });
+  // });
 
+}
+
+
+module.exports.getallorders = async (req, res) => {
+  try {
+    const orders = await orderModel.find()
+      .populate("userId", "fullname email phonenumber") // ensure user field references User model
+      .sort({ createdAt: -1 });
+    res.json(orders);
+    console.log(orders, "order");
+    
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to fetch orders" });
+  }
+
+}
+
+module.exports.settleorders = async (req, res) => {
+   try {
+    const order = await orderModel.findByIdAndUpdate(
+      req.params.id,
+      { status: "Delivered" },
+      { new: true }
+    );
+    console.log(order, "deliver");
+    
+    res.json(order);
+  } catch (error) {
+    res.status(500).json({ message: "Error updating order status", error });
+  }
 }

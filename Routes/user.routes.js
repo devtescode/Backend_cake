@@ -1,6 +1,6 @@
 const express = require("express")
 const { userWelcome, register, login } = require("../Controllers/user.controllers");
-const { useraddorder, getuserorders } = require("../Controllers/user.order");
+const { useraddorder, getuserorders, getallorders } = require("../Controllers/user.order");
 const router = express.Router()
 // const multer = require('multer');
 // const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -35,5 +35,7 @@ router.post("/register", register);
 router.post("/login", login);
 router.post("/useraddorder", useraddorder)
 router.get("/getuserorders/:userId", getuserorders );
+router.get("/getallorders", getallorders)
+
 
 module.exports = router
