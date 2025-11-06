@@ -1,5 +1,5 @@
 const express = require("express")
-const { userWelcome, register, login, logout } = require("../Controllers/user.controllers");
+const { userWelcome, register, login, logout, updatequantity } = require("../Controllers/user.controllers");
 const { useraddorder, getuserorders, getallorders, userdeleteorder } = require("../Controllers/user.order");
 const router = express.Router()
 // const multer = require('multer');
@@ -38,5 +38,6 @@ router.get("/getuserorders/:userId", getuserorders );
 router.get("/getallorders", getallorders)
 router.delete("/userdeleteorder/:id", userdeleteorder);
 router.post("/logout", logout)
+router.put("/updatequantity/:id", updatequantity)
 
 module.exports = router

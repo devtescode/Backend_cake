@@ -41,6 +41,7 @@ const OrderSchema = new mongoose.Schema(
       enum: ["Pending", "Processing", "Delivered", "Cancelled"],
       default: "Pending",
     },
+    quantity: { type: Number, default: 1 },
   },
   { timestamps: true }
 );

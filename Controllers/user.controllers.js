@@ -4,6 +4,7 @@ const env = require("dotenv")
 const mongoose = require("mongoose")
 const bcrypt = require("bcryptjs")
 const { default: axios } = require("axios")
+const orderModel = require("../Models/order.model")
 const ADMIN_SECRET_KEY = process.env.JWT_SECRET_KEY
 const cloudinary = require('cloudinary').v2;
 env.config()
@@ -112,4 +113,35 @@ module.exports.logout = async (req, res) => {
     res.status(500).json({ message: "Server error, please try again later" });
   }
 };
+
+module.exports.updatequantity = async (req, res) => {
+   try {
+    const { quantity } = req.body;
+    const { id } = req.params;
+
+    // Validate quantity
+    if (quantity < 1) {
+      return res.status(400).json({ message: "Quantity must be at least 1" });
+    }
+
+    // Find and update order
+    const updatedOrder = await orderModel.findByIdAndUpdate(
+      id,
+      { quantity },
+      { new: true }
+    );
+
+    if (!updatedOrder) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    res.status(200).json({
+      message: "Quantity updated successfully",
+      order: updatedOrder,
+    });
+  } catch (error) {
+    console.error("Error updating quantity:", error);
+    res.status(500).json({ message: "Server error while updating quantity" });
+  }
+}
 
