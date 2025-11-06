@@ -131,6 +131,8 @@ module.exports.updatequantity = async (req, res) => {
       { new: true }
     );
 
+    // console.log(updatedOrder.quantity, "updated order quantity");
+    
     if (!updatedOrder) {
       return res.status(404).json({ message: "Order not found" });
     }
