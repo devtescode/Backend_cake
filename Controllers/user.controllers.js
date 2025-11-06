@@ -45,38 +45,36 @@ module.exports.register = async (req, res) => {
   }
 };
 
-
 module.exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // check if email & password provided
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
 
-    // find user
     const user = await Userschema.findOne({ email });
     if (!user) {
       return res.status(400).json({ message: "Invalid email" });
     }
 
-    // compare password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(400).json({ message: "Invalid password" });
     }
 
-    // generate JWT token
+    // ✅ Update user activity
+    user.isActive = true;
+    user.lastActiveAt = new Date();
+    await user.save();
+
+    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
-    
-
-    // success response
     res.status(200).json({
       message: "Login successful",
       token,
@@ -85,6 +83,8 @@ module.exports.login = async (req, res) => {
         email: user.email,
         fullname: user.fullname,
         phonenumber: user.phonenumber,
+        isActive: user.isActive,
+        lastActiveAt: user.lastActiveAt,
       },
     });
   } catch (err) {
@@ -92,3 +92,24 @@ module.exports.login = async (req, res) => {
     res.status(500).json({ message: "Server error, please try again later" });
   }
 };
+
+
+module.exports.logout = async (req, res) => {
+  try {
+    const { userId } = req.body; // or req.params.userId
+
+    const user = await Userschema.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.isActive = false;
+    await user.save();
+
+    res.status(200).json({ message: "Logout successful" });
+  } catch (error) {
+    console.error("Logout error:", error);
+    res.status(500).json({ message: "Server error, please try again later" });
+  }
+};
+

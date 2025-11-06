@@ -59,7 +59,7 @@ module.exports.getallorders = async (req, res) => {
       .sort({ createdAt: -1 });
     res.json(orders);
     console.log(orders, "order");
-    
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Failed to fetch orders" });
@@ -68,16 +68,33 @@ module.exports.getallorders = async (req, res) => {
 }
 
 module.exports.settleorders = async (req, res) => {
-   try {
+  try {
     const order = await orderModel.findByIdAndUpdate(
       req.params.id,
       { status: "Delivered" },
       { new: true }
     );
     console.log(order, "deliver");
-    
+
     res.json(order);
   } catch (error) {
     res.status(500).json({ message: "Error updating order status", error });
+  }
+}
+
+module.exports.userdeleteorder = async (req, res) => {
+  try {
+    const { id } = req.params; // from URL: /deleteorder/:id
+
+    const order = await orderModel.findByIdAndDelete(id);
+    console.log(order, "deleted order");
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    return res.status(200).json({ message: "Order deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting order:", error);
+    return res.status(500).json({ message: "Server error", error });
   }
 }

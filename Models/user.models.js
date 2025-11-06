@@ -1,12 +1,17 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
-let schema = mongoose.Schema({
-    fullname: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    phonenumber: { type: String, required: true },
-    password: { type: String, required: true }, 
-})
+let schema = new mongoose.Schema(
+    {
+        fullname: { type: String, required: true },
+        email: { type: String, required: true, unique: true },
+        phonenumber: { type: String, required: true },
+        password: { type: String, required: true },
+        isActive: { type: Boolean, default: false },  // ✅ Track active status
+        lastActiveAt: { type: Date, default: null },  // ✅ Track last active date
+    },
+    { timestamps: true } // 👈 Add this line
+);
 
 
 
