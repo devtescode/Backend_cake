@@ -16,7 +16,7 @@ router.put("/orders/:id/delivered", require("../Admincreateplan/admindelivered")
 router.get("/settledorders", require("../Admincreateplan/admindelivered").settledorders);
 router.put("/deliveredgroup", require("../Admincreateplan/admindelivered").deliveredgroup);
 router.get("/admingetallusers", require("../Admincreateplan/admingetallusers").admingetallusers);
-
+router.get("/getdashboardstatus", require("../Admincreateplan/getdashboardstatus").getdashboardstatus);
 
 
 
