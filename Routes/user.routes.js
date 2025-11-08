@@ -39,5 +39,7 @@ router.get("/getallorders", getallorders)
 router.delete("/userdeleteorder/:id", userdeleteorder);
 router.post("/logout", logout)
 router.put("/updatequantity/:id", updatequantity)
+router.get("/getUserDashboard/:userId", require("../Controllers/getUserDashboard").getUserDashboard);
+
 
 module.exports = router
