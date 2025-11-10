@@ -32,7 +32,19 @@ module.exports.getUserDashboard = async (req, res) => {
     const totalQuantity = orders.reduce((sum, order) => sum + (order.quantity || 1), 0);
 
     // 6️⃣ Recent Orders (limit to 3)
-    const recentOrders = orders.slice(0, 3).map(order => ({
+    // const recentOrders = orders.slice(0, 3).map(order => ({
+    //   _id: order._id,
+    //   name: order.name,
+    //   price: order.price,
+    //   quantity: order.items
+    //     ? order.items.reduce((s, i) => s + i.quantity, 0)
+    //     : (order.quantity || 1),
+    //   status: order.status,
+    //   cakeImage: order.image,
+    //   createdAt: order.createdAt,
+    // }));
+
+    const recentOrders = orders.map(order => ({
       _id: order._id,
       name: order.name,
       price: order.price,
@@ -43,6 +55,7 @@ module.exports.getUserDashboard = async (req, res) => {
       cakeImage: order.image,
       createdAt: order.createdAt,
     }));
+
 
     res.json({
       totalOrders,
