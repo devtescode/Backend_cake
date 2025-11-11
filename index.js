@@ -37,7 +37,7 @@ app.use('/admin', AdminRoutes);
 app.use("/payments", Payment)
 
 
-app.use('/api/paystack', 
+app.use('/cakeapi/cakepaystack', 
   express.raw({ type: '*/*' }),  
   (req, res, next) => {
       req.rawBody = req.body;  
