@@ -8,114 +8,149 @@ require("dotenv").config();
 
 const PAYSTACK_SECRET_KEY = process.env.API_SECRET_PAYSTACK;
 
-router.post("/cakewebhook", express.raw({ type: "application/json" }), async (req, res) => {
+router.post(
+  "/cakewebhook",
+  express.raw({ type: "application/json" }),
+  async (req, res) => {
     console.log("🔔 Cake webhook triggered");
 
     try {
-        if (!PAYSTACK_SECRET_KEY) {
-            console.error("❌ Paystack secret key is missing! Check your .env file.");
-            return res.status(500).json({ error: "Paystack secret key not configured" });
+      if (!PAYSTACK_SECRET_KEY) {
+        console.error("❌ Paystack secret key is missing!");
+        return res.status(500).json({ error: "Paystack secret key not configured" });
+      }
+
+      const signature = req.headers["x-paystack-signature"];
+      if (!signature || !req.body) {
+        console.error("❌ Missing signature or raw body");
+        return res.status(400).json({ error: "Missing signature or raw body" });
+      }
+
+      const rawBodyBuffer = Buffer.isBuffer(req.body)
+        ? req.body
+        : Buffer.from(JSON.stringify(req.body));
+
+      // Verify Paystack signature
+      const hash = crypto
+        .createHmac("sha512", PAYSTACK_SECRET_KEY)
+        .update(rawBodyBuffer)
+        .digest("hex");
+
+      if (hash !== signature) {
+        console.error("❌ Invalid Paystack signature");
+        return res.status(403).json({ error: "Invalid signature" });
+      }
+
+      // Parse webhook event
+      const event = JSON.parse(rawBodyBuffer.toString("utf8"));
+      console.log("✅ Paystack Webhook Event:", event.event);
+
+      if (event.event === "charge.success") {
+        const {
+          amount,
+          status,
+          paidAt,
+          authorization,
+          channel,
+          reference,
+          metadata,
+          customer,
+        } = event.data || {};
+
+        const email = customer?.email || metadata?.email;
+        const authorization_code = authorization?.authorization_code || "N/A";
+
+        if (!amount || !email) {
+          console.error("❌ Missing required payment data");
+          return res.status(400).json({ error: "Missing amount or email" });
         }
 
-        const signature = req.headers["x-paystack-signature"];
-        if (!signature || !req.body) {
-            console.error("❌ Missing signature or raw body");
-            return res.status(400).json({ error: "Missing signature or raw body" });
+        const amountInNGN = amount / 100;
+        const currencyCode = "NGN";
+
+        // Prevent duplicate entries
+        const existingPayment = await PaymentDB.findOne({ reference });
+        if (existingPayment) {
+          console.warn("⚠️ Duplicate payment reference ignored:", reference);
+          return res.status(200).json({ message: "Duplicate payment ignored" });
         }
 
-        // Convert raw body to Buffer if not already
-        const rawBodyBuffer = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+        // Save payment record
+        const payment = new PaymentDB({
+          event: event.event,
+          customerEmail: email,
+          amount: amountInNGN,
+          currency: currencyCode,
+          reference,
+          status,
+          paidAt: paidAt ? new Date(paidAt) : new Date(),
+          authorizationCode: authorization_code,
+          paymentMethod: "Paystack",
+          channel: channel || "unknown",
+          metadata: metadata || {},
+        });
 
-        // Verify Paystack signature
-        const hash = crypto.createHmac("sha512", PAYSTACK_SECRET_KEY)
-                           .update(rawBodyBuffer)
-                           .digest("hex");
+        await payment.save();
+        console.log(`💰 Payment saved: ${reference} (${currencyCode} ${amountInNGN})`);
 
-        if (hash !== signature) {
-            console.error("❌ Invalid Paystack signature");
-            return res.status(403).json({ error: "Invalid signature" });
+        // Update user balance
+        const user = await Userschema.findOne({ email });
+        if (user) {
+          if (!user.Balance) user.Balance = {};
+          if (!user.Balance[currencyCode]) user.Balance[currencyCode] = 0;
+
+          user.Balance[currencyCode] += amountInNGN;
+          await user.save();
+          console.log(`✅ ${currencyCode} balance updated for ${user.fullname}`);
+        } else {
+          console.warn(`⚠️ No user found for email: ${email}`);
         }
 
-        // Parse webhook event
-        const event = JSON.parse(rawBodyBuffer.toString("utf8"));
-        console.log("✅ Paystack Webhook Event:", event);
+        // ✅ Handle multiple orders
+        const allOrders = metadata?.allOrders || [];
 
-        if (event.event === "charge.success") {
-            const { amount, status, paidAt, authorization, channel, reference, metadata, customer } = event.data || {};
-            const email = customer?.email || metadata?.email;
-            const authorization_code = authorization?.authorization_code || "N/A";
-
-            if (!amount || !email) {
-                console.error("❌ Missing required payment data");
-                return res.status(400).json({ error: "Missing amount or email" });
-            }
-
-            const amountInNGN = amount / 100;
-            const currencyCode = "NGN";
-
-            // Prevent duplicate payment entries
-            const existingPayment = await PaymentDB.findOne({ reference });
-            if (existingPayment) {
-                console.warn("⚠️ Duplicate payment reference ignored:", reference);
-                return res.status(200).json({ message: "Duplicate payment ignored" });
-            }
-
-            // Save payment record
-            const payment = new PaymentDB({
-                event: event.event,
-                customerEmail: email,
-                amount: amountInNGN,
-                currency: currencyCode,
-                reference,
-                status,
-                paidAt: paidAt ? new Date(paidAt) : new Date(),
-                authorizationCode: authorization_code,
-                paymentMethod: "Paystack",
-                channel: channel || "unknown",
-                metadata: metadata || {},
-            });
-
-            await payment.save();
-            console.log(`💰 Payment saved: ${reference} (${currencyCode} ${amountInNGN})`);
-
-            // Update user balance
-            const user = await Userschema.findOne({ email });
-            if (user) {
-                if (!user.Balance) user.Balance = {};
-                if (!user.Balance[currencyCode]) user.Balance[currencyCode] = 0;
-
-                user.Balance[currencyCode] += amountInNGN;
-                await user.save();
-                console.log(`✅ ${currencyCode} balance updated for ${user.fullname}: +${amountInNGN}`);
-            } else {
-                console.warn(`⚠️ No user found for email: ${email}`);
-            }
-
-            // ✅ Update corresponding order as paid/success safely
-            if (metadata?.orderId) {
-                const order = await orderModel.findById(metadata.orderId);
-                if (order) {
-                    if (!order.isPaid) {
-                        order.status = "Success";
-                        order.isPaid = true;
-                        await order.save();
-                        console.log(`✅ Order ${order._id} marked as Success`);
-                    } else {
-                        console.log(`⚠️ Order ${order._id} already marked as paid`);
-                    }
+        if (allOrders.length > 0) {
+          for (const orderId of allOrders) {
+            try {
+              const order = await orderModel.findById(orderId);
+              if (order) {
+                if (!order.isPaid) {
+                  order.status = "Success";
+                  order.isPaid = true;
+                  await order.save();
+                  console.log(`✅ Order ${order._id} marked as Success`);
                 } else {
-                    console.warn(`⚠️ No order found with ID: ${metadata.orderId}`);
+                  console.log(`⚠️ Order ${order._id} already marked as paid`);
                 }
-            } else {
-                console.warn("⚠️ No orderId found in metadata");
+              } else {
+                console.warn(`⚠️ No order found with ID: ${orderId}`);
+              }
+            } catch (err) {
+              console.error(`🔥 Error updating order ${orderId}:`, err.message);
             }
+          }
+        } else if (metadata?.orderId) {
+          // fallback for single order
+          const order = await orderModel.findById(metadata.orderId);
+          if (order) {
+            if (!order.isPaid) {
+              order.status = "Success";
+              order.isPaid = true;
+              await order.save();
+              console.log(`✅ Single order ${order._id} marked as Success`);
+            }
+          }
+        } else {
+          console.warn("⚠️ No order IDs found in metadata");
         }
+      }
 
-        return res.status(200).json({ message: "Webhook processed successfully" });
+      return res.status(200).json({ message: "Webhook processed successfully" });
     } catch (error) {
-        console.error("🔥 Webhook error:", error);
-        return res.status(500).json({ error: "Internal Server Error" });
+      console.error("🔥 Webhook error:", error);
+      return res.status(500).json({ error: "Internal Server Error" });
     }
-});
+  }
+);
 
 module.exports = router;
