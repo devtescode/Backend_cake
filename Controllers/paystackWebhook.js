@@ -7,29 +7,28 @@ require("dotenv").config();
 
 const PAYSTACK_SECRET_KEY = process.env.API_SECRET_PAYSTACK;
 
-
-
 router.post("/cakewebhook", express.raw({ type: "application/json" }), async (req, res) => {
-    console.log("my Cakeswebhooks");
+    console.log("🔔 Cake webhook triggered");
 
     try {
-        const signature = req.headers["x-paystack-signature"];
-        const rawBody = req.body;
-
         if (!PAYSTACK_SECRET_KEY) {
             console.error("❌ Paystack secret key is missing! Check your .env file.");
-            process.exit(1);
+            return res.status(500).json({ error: "Paystack secret key not configured" });
         }
 
-        if (!signature || !rawBody) {
+        const signature = req.headers["x-paystack-signature"];
+        if (!signature || !req.body) {
             console.error("❌ Missing signature or raw body");
             return res.status(400).json({ error: "Missing signature or raw body" });
         }
 
-        // ✅ Verify Paystack signature
+        // Convert raw body to Buffer if not already
+        const rawBodyBuffer = Buffer.isBuffer(req.body) ? req.body : Buffer.from(JSON.stringify(req.body));
+
+        // Verify Paystack signature
         const hash = crypto.createHmac("sha512", PAYSTACK_SECRET_KEY)
-            .update(rawBody)
-            .digest("hex");
+                           .update(rawBodyBuffer)
+                           .digest("hex");
 
         if (hash !== signature) {
             console.error("❌ Invalid Paystack signature");
@@ -37,21 +36,11 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
         }
 
         // Parse webhook event
-        const event = JSON.parse(rawBody.toString("utf8"));
+        const event = JSON.parse(rawBodyBuffer.toString("utf8"));
         console.log("✅ Paystack Webhook Event:", event.event);
 
         if (event.event === "charge.success") {
-            const {
-                amount,
-                status,
-                paidAt,
-                authorization,
-                channel,
-                reference,
-                metadata,
-                customer,
-            } = event.data || {};
-
+            const { amount, status, paidAt, authorization, channel, reference, metadata, customer } = event.data || {};
             const email = customer?.email || metadata?.email;
             const authorization_code = authorization?.authorization_code || "N/A";
 
@@ -63,14 +52,14 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
             const amountInNGN = amount / 100; // Convert kobo to Naira
             const currencyCode = "NGN"; // Force NGN only
 
-            // ✅ Prevent duplicate payment entries
+            // Prevent duplicate payment entries
             const existingPayment = await PaymentDB.findOne({ reference });
             if (existingPayment) {
                 console.warn("⚠️ Duplicate payment reference ignored:", reference);
                 return res.status(200).json({ message: "Duplicate payment ignored" });
             }
 
-            // ✅ Save payment record
+            // Save payment record
             const payment = new PaymentDB({
                 event: event.event,
                 customerEmail: email,
@@ -88,7 +77,7 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
             await payment.save();
             console.log(`💰 Payment saved: ${reference} (${currencyCode} ${amountInNGN})`);
 
-            // ✅ Update user balance
+            // Update user balance
             const user = await Userschema.findOne({ email });
             if (user) {
                 if (!user.Balance) user.Balance = {};
@@ -96,7 +85,6 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
 
                 user.Balance[currencyCode] += amountInNGN;
                 await user.save();
-
                 console.log(`✅ ${currencyCode} balance updated for ${user.fullname}: +${amountInNGN}`);
             } else {
                 console.warn(`⚠️ No user found for email: ${email}`);
@@ -105,7 +93,7 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
 
         return res.status(200).json({ message: "Webhook processed successfully" });
     } catch (error) {
-        console.error("🔥 Webhook error:", error.message);
+        console.error("🔥 Webhook error:", error);
         return res.status(500).json({ error: "Internal Server Error" });
     }
 });
