@@ -2,10 +2,10 @@ const axios = require("axios");
 require("dotenv").config();
 
 module.exports.initialize = async (req, res) => {
-    const { email, amount, currency } = req.body;
+    const { email, amount, currency, orderId } = req.body;
 
-    if (!email || !amount) {
-        return res.status(400).json({ error: "Email and amount are required" });
+    if (!email || !amount || !orderId) {
+        return res.status(400).json({ error: "Email, amount, and orderId are required" });
     }
 
     // Validate currency: currently only NGN is active on most Paystack accounts
@@ -21,7 +21,7 @@ module.exports.initialize = async (req, res) => {
                 email,
                 amount: amount * 100, // Paystack expects amount in kobo/pence
                 currency: selectedCurrency,
-                metadata: { email },
+                metadata: { email, orderId }, // <-- Add orderId here
             },
             {
                 headers: {

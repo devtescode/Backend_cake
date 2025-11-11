@@ -3,6 +3,7 @@ const crypto = require("crypto");
 const router = express.Router();
 const { PaymentDB } = require("../Models/webhookModel");
 const { Userschema } = require("../Models/user.models");
+const orderModel = require("../Models/order.model");
 require("dotenv").config();
 
 const PAYSTACK_SECRET_KEY = process.env.API_SECRET_PAYSTACK;
@@ -49,8 +50,8 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
                 return res.status(400).json({ error: "Missing amount or email" });
             }
 
-            const amountInNGN = amount / 100; // Convert kobo to Naira
-            const currencyCode = "NGN"; // Force NGN only
+            const amountInNGN = amount / 100;
+            const currencyCode = "NGN";
 
             // Prevent duplicate payment entries
             const existingPayment = await PaymentDB.findOne({ reference });
@@ -88,6 +89,25 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
                 console.log(`✅ ${currencyCode} balance updated for ${user.fullname}: +${amountInNGN}`);
             } else {
                 console.warn(`⚠️ No user found for email: ${email}`);
+            }
+
+            // ✅ Update corresponding order as paid/success safely
+            if (metadata?.orderId) {
+                const order = await orderModel.findById(metadata.orderId);
+                if (order) {
+                    if (!order.isPaid) {
+                        order.status = "Success";
+                        order.isPaid = true;
+                        await order.save();
+                        console.log(`✅ Order ${order._id} marked as Success`);
+                    } else {
+                        console.log(`⚠️ Order ${order._id} already marked as paid`);
+                    }
+                } else {
+                    console.warn(`⚠️ No order found with ID: ${metadata.orderId}`);
+                }
+            } else {
+                console.warn("⚠️ No orderId found in metadata");
             }
         }
 
