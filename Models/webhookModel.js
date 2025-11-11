@@ -22,7 +22,7 @@ const paymentSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-paymentSchema.index({ reference: 1 });
+// paymentSchema.index({ reference: 1 });
 
 const PaymentDB = mongoose.model("paystackpayment", paymentSchema);
 
