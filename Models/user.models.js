@@ -10,9 +10,11 @@ let schema = new mongoose.Schema(
         isActive: { type: Boolean, default: false },  // ✅ Track active status
         lastActiveAt: { type: Date, default: null },  // ✅ Track last active date
         Balance: {
-            type: Object,
-            default: {}, // Example: { NGN: 5000, GBP: 20 }
+            type: Map, // Better than plain Object — more flexible for currencies
+            of: Number,
+            default: { NGN: 0, GBP: 0 },
         },
+
     },
     { timestamps: true } // 👈 Add this line
 );
