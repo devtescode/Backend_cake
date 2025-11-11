@@ -39,7 +39,6 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
                 authorization,
                 channel,
                 reference,
-                currency,
                 metadata,
                 customer,
             } = event.data || {};
@@ -52,8 +51,8 @@ router.post("/webhook", express.raw({ type: "application/json" }), async (req, r
                 return res.status(400).json({ error: "Missing amount or email" });
             }
 
-            const amountInNGN = amount / 100;
-            const currencyCode = "NGN"; // ✅ Force NGN only
+            const amountInNGN = amount / 100; // Convert kobo to Naira
+            const currencyCode = "NGN"; // Force NGN only
 
             // ✅ Prevent duplicate payment entries
             const existingPayment = await PaymentDB.findOne({ reference });
