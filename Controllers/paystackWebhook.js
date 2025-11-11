@@ -8,6 +8,8 @@ require("dotenv").config();
 const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
 router.post("/cakewebhook", express.raw({ type: "application/json" }), async (req, res) => {
+    console.log("my Cakeswebhooks");
+    
     try {
         const signature = req.headers["x-paystack-signature"];
         const rawBody = req.body;
