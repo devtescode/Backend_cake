@@ -5,6 +5,8 @@ require('dotenv').config();
 const cors = require('cors');
 const userRoutes = require('./Routes/user.routes');
 const AdminRoutes = require('./Routes/admin');
+const Payment = require('./Routes/payments')
+const paystackroute = require('./Controllers/paystackWebhook');
 // const { initializeSocket } = require('./socket'); // Import socket initializer
 // const paystackroute = require('./Controllers/paystackWebhook');
 const cloudinary = require("./config/cloudinary"); 
@@ -32,6 +34,18 @@ mongoose
 
 app.use('/usercake', userRoutes);
 app.use('/admin', AdminRoutes);
+app.use("/payments", Payment)
+
+
+app.use('/api/paystack', 
+  express.raw({ type: '*/*' }),  
+  (req, res, next) => {
+      req.rawBody = req.body;  
+      console.log('Captured Raw Body:', req.rawBody.toString('utf8')); 
+      next(); 
+  },
+  paystackroute
+);
 
 // app.use('/api/paystack', 
 //   express.raw({ type: '*/*' }),  

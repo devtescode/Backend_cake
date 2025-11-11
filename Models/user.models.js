@@ -9,6 +9,10 @@ let schema = new mongoose.Schema(
         password: { type: String, required: true },
         isActive: { type: Boolean, default: false },  // ✅ Track active status
         lastActiveAt: { type: Date, default: null },  // ✅ Track last active date
+        Balance: {
+            type: Object,
+            default: {}, // Example: { NGN: 5000, GBP: 20 }
+        },
     },
     { timestamps: true } // 👈 Add this line
 );
