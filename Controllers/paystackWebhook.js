@@ -5,14 +5,21 @@ const { PaymentDB } = require("../Models/webhookModel");
 const { Userschema } = require("../Models/user.models");
 require("dotenv").config();
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+const PAYSTACK_SECRET_KEY = process.env.API_SECRET_PAYSTACK;
+
+
 
 router.post("/cakewebhook", express.raw({ type: "application/json" }), async (req, res) => {
     console.log("my Cakeswebhooks");
-    
+
     try {
         const signature = req.headers["x-paystack-signature"];
         const rawBody = req.body;
+
+        if (!PAYSTACK_SECRET_KEY) {
+            console.error("❌ Paystack secret key is missing! Check your .env file.");
+            process.exit(1);
+        }
 
         if (!signature || !rawBody) {
             console.error("❌ Missing signature or raw body");
