@@ -37,7 +37,7 @@ router.post("/cakewebhook", express.raw({ type: "application/json" }), async (re
 
         // Parse webhook event
         const event = JSON.parse(rawBodyBuffer.toString("utf8"));
-        console.log("✅ Paystack Webhook Event:", event.event);
+        console.log("✅ Paystack Webhook Event:", event);
 
         if (event.event === "charge.success") {
             const { amount, status, paidAt, authorization, channel, reference, metadata, customer } = event.data || {};
