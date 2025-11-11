@@ -2,41 +2,55 @@ const axios = require("axios");
 require("dotenv").config();
 
 module.exports.initialize = async (req, res) => {
-    const { email, amount, currency, orderId } = req.body;
+  const { email, amount, currency, metadata } = req.body;
 
-    if (!email || !amount || !orderId) {
-        return res.status(400).json({ error: "Email, amount, and orderId are required" });
-    }
+  // ✅ Validate required fields
+  if (!email || !amount || !metadata) {
+    return res.status(400).json({
+      error: "Email, amount, and metadata (orders) are required",
+    });
+  }
 
-    // Validate currency: currently only NGN is active on most Paystack accounts
-    const supportedCurrencies = ["NGN"]; // Add "GBP" if Paystack activates it
-    const selectedCurrency = currency && supportedCurrencies.includes(currency.toUpperCase())
-        ? currency.toUpperCase()
-        : "NGN";
+  // ✅ Ensure amount is a valid number
+  if (isNaN(amount) || amount <= 0) {
+    return res.status(400).json({ error: "Invalid amount" });
+  }
 
-    try {
-        const response = await axios.post(
-            "https://api.paystack.co/transaction/initialize",
-            {
-                email,
-                amount: amount * 100, // Paystack expects amount in kobo/pence
-                currency: selectedCurrency,
-                metadata: { email, orderId }, // <-- Add orderId here
-            },
-            {
-                headers: {
-                    Authorization: `Bearer ${process.env.API_SECRET_PAYSTACK}`,
-                    "Content-Type": "application/json",
-                },
-            }
-        );
+  // ✅ Validate currency (default to NGN)
+  const supportedCurrencies = ["NGN"];
+  const selectedCurrency =
+    currency && supportedCurrencies.includes(currency.toUpperCase())
+      ? currency.toUpperCase()
+      : "NGN";
 
-        res.json(response.data);
-    } catch (error) {
-        console.error(
-            "Paystack initialization error:",
-            error.response?.data || error.message
-        );
-        res.status(500).json({ error: "Payment initialization failed" });
-    }
+  try {
+    // ✅ Initialize Paystack transaction
+    const response = await axios.post(
+      "https://api.paystack.co/transaction/initialize",
+      {
+        email,
+        amount: Math.round(amount * 100), // Paystack expects amount in kobo
+        currency: selectedCurrency,
+        metadata, // This now includes allOrders or any other info
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.API_SECRET_PAYSTACK}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    console.error(
+      "Paystack initialization error:",
+      error.response?.data || error.message
+    );
+
+    res.status(500).json({
+      error: "Payment initialization failed",
+      details: error.response?.data || error.message,
+    });
+  }
 };
