@@ -39,9 +39,14 @@ module.exports.getdashboardstatus = async (req, res) => {
       totalRevenue,
       totalQuantity, // 👈 Added total quantity here
       recentOrders,
-    });
+    }); 
   } catch (error) {
     console.error("Error fetching dashboard stats:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
+
+
+
+
+
