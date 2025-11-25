@@ -9,6 +9,9 @@ let schema = new mongoose.Schema(
         password: { type: String, required: true },
         isActive: { type: Boolean, default: false },  // ✅ Track active status
         lastActiveAt: { type: Date, default: null },  // ✅ Track last active date
+        profileImage: { type: String, default: "" }, // ✅ Add this
+         address: { type: String, default: "" },  // ✅ Add this
+        bio: { type: String, default: "" },  
         Balance: {
             type: Map, // Better than plain Object — more flexible for currencies
             of: Number,

@@ -1,6 +1,7 @@
 const express = require("express")
 const { userWelcome, register, login, logout, updatequantity } = require("../Controllers/user.controllers");
 const { useraddorder, getuserorders, getallorders, userdeleteorder } = require("../Controllers/user.order");
+const { upload, updateprofile } = require("../Controllers/updateprofilepic");
 const router = express.Router()
 // const multer = require('multer');
 // const { CloudinaryStorage } = require('multer-storage-cloudinary');
@@ -40,6 +41,8 @@ router.delete("/userdeleteorder/:id", userdeleteorder);
 router.post("/logout", logout)
 router.put("/updatequantity/:id", updatequantity)
 router.get("/getUserDashboard/:userId", require("../Controllers/getUserDashboard").getUserDashboard);
-
+router.get("/userprofileupdate/:userId", require("../Controllers/userprofileupdate").userprofileupdate);
+// router.put("/updateprofile/:userId", upload.single("profileImage"), updateprofile);
+router.put("/updateprofile/:userId", upload.single("profileImage"), updateprofile)
 
 module.exports = router
