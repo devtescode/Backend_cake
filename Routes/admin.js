@@ -17,6 +17,14 @@ router.get("/settledorders", require("../Admincreateplan/admindelivered").settle
 router.put("/deliveredgroup", require("../Admincreateplan/admindelivered").deliveredgroup);
 router.get("/admingetallusers", require("../Admincreateplan/admingetallusers").admingetallusers);
 router.get("/getdashboardstatus", require("../Admincreateplan/getdashboardstatus").getdashboardstatus);
+router.post("/sendnotification", require("../Admincreateplan/adminnotification").sendNotification);
+router.get("/getnotifications", require("../Admincreateplan/adminnotification").getNotifications);
+router.get("/getAllUsers", require("../Admincreateplan/adminnotification").getAllUsers);
+router.delete("/deletenotification/:id", require("../Admincreateplan/adminnotification").deleteNotification);
+router.get("/getusernotifications/:userId", require("../Admincreateplan/adminnotification").getUserNotifications);
+router.patch("/markasread/:id", require("../Admincreateplan/adminnotification").markAsRead);
+// router.delete("/deletenotification/:id", require("../Admincreateplan/adminnotification").deleteNotification);
+// router.get("/getusernotifications/:userId", require("../Admincreateplan/adminnotification").getUserNotifications);
 
 
 
