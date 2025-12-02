@@ -32,7 +32,7 @@ module.exports.userprofileupdate = async (req, res) => {
 
         res.json({
             profile: {
-                fullName: user.fullname,       // map 'fullname' → 'fullName'
+                fullName: user.fullname,      
                 email: user.email,
                 phone: user.phonenumber,       // map 'phonenumber' → 'phone'
                 address: user.address || '',
