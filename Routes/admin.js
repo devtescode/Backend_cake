@@ -23,8 +23,7 @@ router.get("/getAllUsers", require("../Admincreateplan/adminnotification").getAl
 router.delete("/deletenotification/:id", require("../Admincreateplan/adminnotification").deleteNotification);
 router.get("/getusernotifications/:userId", require("../Admincreateplan/adminnotification").getUserNotifications);
 router.patch("/markasread/:id", require("../Admincreateplan/adminnotification").markAsRead);
-// router.delete("/deletenotification/:id", require("../Admincreateplan/adminnotification").deleteNotification);
-// router.get("/getusernotifications/:userId", require("../Admincreateplan/adminnotification").getUserNotifications);
+
 
 
 
