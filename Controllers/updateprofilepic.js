@@ -4,20 +4,17 @@ const path = require("path");
 const cloudinary = require("cloudinary").v2;
 const fs = require("fs");
 
-// Configure Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-// Ensure the upload folder exists
 const uploadDir = path.join(__dirname, "../uploads/profileImages");
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
 
-// Multer storage (temporary local storage)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => cb(null, uploadDir),
   filename: (req, file, cb) => {
@@ -28,7 +25,6 @@ const storage = multer.diskStorage({
 
 const upload = multer({ storage });
 
-// Controller for updating profile
 const updateprofile = async (req, res) => {
   try {
     const { userId } = req.params;

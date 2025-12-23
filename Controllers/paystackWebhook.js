@@ -30,7 +30,6 @@ router.post(
         ? req.body
         : Buffer.from(JSON.stringify(req.body));
 
-      // Verify Paystack signature
       const hash = crypto
         .createHmac("sha512", PAYSTACK_SECRET_KEY)
         .update(rawBodyBuffer)
